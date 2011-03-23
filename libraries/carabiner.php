@@ -232,9 +232,9 @@
 
 class Carabiner {
     
-    public $base_uri = '';
+  public $base_uri = '';
     
-    public $script_dir  = '';
+  public $script_dir  = '';
 	public $script_path = '';
 	public $script_uri  = '';
 	
@@ -257,7 +257,7 @@ class Carabiner {
 	private $css = array('main'=>array());
 	private $loaded = array();
 	
-    private $CI;
+  private $CI;
 	
 	
 	/** 
@@ -580,9 +580,13 @@ class Carabiner {
 			$lastmodified = 0;
 			$files = array();
 			$filenames = '';
+      $total_files = 0;
+      $uncombined_files = 0;
 			
 			
 			foreach($this->js[$group] as $ref):
+
+        $total_files++;
 
 				// get the last modified date of the most recently modified file
 				$lastmodified = max( $lastmodified , filemtime(realpath($this->script_path.$ref['dev'])) );
@@ -590,6 +594,7 @@ class Carabiner {
 				$filenames .= $ref['dev'];
 
 				if(!$ref['combine']):
+          $uncombined_files++;
 					echo (isset($ref['prod'])) ? $this->_tag('js', $ref['prod']) : $this->_tag('js', $ref['dev']);					
 				elseif(!$ref['minify']):
 					$files[] = (isset($ref['prod'])) ? array('prod'=>$ref['prod'], 'dev'=>$ref['dev'], 'minify'=>$ref['minify'] ) : array('dev'=>$ref['dev'], 'minify'=>$ref['minify']);
@@ -599,13 +604,15 @@ class Carabiner {
 				
 			endforeach;
 
-			$lastmodified = ($lastmodified == 0) ? '0000000000' : $lastmodified;
-			
-			$filename = $lastmodified . md5($filenames).'.js';
-			
-			if( !file_exists($this->cache_path.$filename) )	$this->_combine('js', $files, $filename);
+      if( $total_files - $uncombined_files != 0 ){
+        $lastmodified = ($lastmodified == 0) ? '0000000000' : $lastmodified;
 
-			echo $this->_tag('js', $filename, TRUE);
+        $filename = $lastmodified . md5($filenames).'.js';
+
+        if( !file_exists($this->cache_path.$filename) )	$this->_combine('js', $files, $filename);
+
+        echo $this->_tag('js', $filename, TRUE);
+      }
 
 
 		// if we're combining files but not minifying
@@ -614,16 +621,20 @@ class Carabiner {
 			$lastmodified = 0;
 			$files = array();
 			$filenames = '';
-
+      $total_files = 0;
+      $uncombined_files = 0;
 				
 			foreach($this->js[$group] as $ref):
-			
+
+        $total_files++;
+
 				// get the last modified date of the most recently modified file
 				$lastmodified = max( $lastmodified , filemtime(realpath($this->script_path.$ref['dev'])) );
 
 				$filenames .= $ref['dev'];
 
 				if(!$ref['combine']):
+          $uncombined_files++;
 					echo (isset($ref['prod'])) ? $this->_tag('js', $ref['prod']) : $this->_tag('js', $ref['dev']);					
 				else:
 					$files[] = (isset($ref['prod'])) ? array('prod'=>$ref['prod'], 'dev'=>$ref['dev'], 'minify'=> FALSE ) : array('dev'=>$ref['dev'], 'minify'=> FALSE);
@@ -631,14 +642,15 @@ class Carabiner {
 				
 			endforeach;
 
-			$lastmodified = ($lastmodified == 0) ? '0000000000' : $lastmodified;
-			
-			$filename = $lastmodified . md5($filenames).'.js';
-			
-			if( !file_exists($this->cache_path.$filename) )	$this->_combine('js', $files, $filename);
+      if( $total_files - $uncombined_files != 0 ){
+        $lastmodified = ($lastmodified == 0) ? '0000000000' : $lastmodified;
 
-			echo $this->_tag('js', $filename, TRUE);
-			
+        $filename = $lastmodified . md5($filenames).'.js';
+
+        if( !file_exists($this->cache_path.$filename) )	$this->_combine('js', $files, $filename);
+
+        echo $this->_tag('js', $filename, TRUE);
+      }
 
 
 		// if we're minifying. but not combining
